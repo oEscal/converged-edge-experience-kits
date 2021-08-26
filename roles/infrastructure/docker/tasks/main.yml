@@ -2,7 +2,7 @@
 # Copyright (c) 2019-2020 Intel Corporation
 
 ---
-- name: add Docker repository
+- name: add Docker repository in CentOs
   yum_repository:
     name: docker
     description: Docker CE repository
@@ -14,14 +14,70 @@
   retries: "{{ number_of_retries }}"
   until: result is succeeded
   delay: "{{ retry_delay }}"
-  when: not offline_enable
+  when: 
+     - not offline_enable
+     - ansible_distribution == "CentOS"
+
+- name: Install aptitude using apt (Ubuntu) 
+  apt: 
+    name: aptitude 
+    state: latest 
+    update_cache: yes 
+    force_apt_get: yes
+  when: ansible_distribution == "Ubuntu"
+  become: yes
+
+- name: Install required system packages for Ubuntu
+  apt: 
+    name: "{{ item }}"
+    state: latest 
+    update_cache: yes
+  with_items:
+     - apt-transport-https 
+     - ca-certificates 
+     - curl
+     - software-properties-common
+     - python3-pip
+     - virtualenv
+     - python3-setuptools
+  become: yes
+  when: ansible_distribution == "Ubuntu"
+
+- name: Add Docker GPG apt Key in Ubuntu
+  apt_key:
+     url: https://download.docker.com/linux/ubuntu/gpg
+     state: present
+  when: ansible_distribution == "Ubuntu"
+  become: yes
+
+- name: Add Docker Repository to Ubuntu
+  apt_repository:
+     repo: deb https://download.docker.com/linux/ubuntu bionic stable
+     state: present
+  when: ansible_distribution == "Ubuntu"
+  become: yes 
+
+- name: DPKG Fix for some reason
+  command: dpkg --configure -a
+  become: yes
+
+- name: Update apt and install docker-ce in Ubuntu
+  apt: 
+    update_cache: yes 
+    name: docker-ce 
+    state: latest
+    update_cache: yes
+  when: ansible_distribution == "Ubuntu"
+  become: yes
 
 - name: clear yum cache
   command: yum clean all
   args:
     warn: false
   changed_when: true
-  when: not offline_enable
+  when: 
+     - not offline_enable
+     - ansible_distribution == "CentOS"
 
 - name: add group "docker"
   group:
@@ -39,19 +95,29 @@
 - name: reset connection
   meta: reset_connection
 
-- name: install Docker CE
+- name: install Docker CE for CentOS
   yum:
     name: "{{ _docker_packages }}"
     state: present
   become: yes
   notify:
     - enable and start docker service
+  when: ansible_distribution == "CentOS"
 
 - name: get runc version
   shell: set -o pipefail && runc --version | grep -oP '{{ _runc_ver_pattern }}\K(.+)'
   register: runc_rc_ver
   ignore_errors: true
   changed_when: false
+  when: ansible_distribution == "CentOS"
+
+- name: get runc for Ubuntu
+  apt: 
+    name: runc
+    state: present
+    update_cache: yes
+  become: yes
+  when: ansible_distribution == "Ubuntu"
 
 - name: Check if offline mode
   set_fact:
@@ -75,7 +141,10 @@
         dest: /usr/bin/runc
         checksum: "sha256:{{ _runc_checksum }}"
       become: yes
-  when: runc_rc_ver.rc == 0 and runc_rc_ver.stdout|int < _runc_min_rc
+  when: 
+     - ansible_distribution == "CentOS"
+     - runc_rc_ver.rc == 0
+     - runc_rc_ver.stdout|int < _runc_min_rc 
 
 - name: install pip dependencies
   block:
@@ -88,6 +157,7 @@
         requirements: /tmp/requirements.txt
         state: present
         extra_args: "{{ local_pip | default(omit) }}"
+        executable: pip2
       register: result
       retries: "{{ number_of_retries }}"
       until: result is succeeded
@@ -98,6 +168,7 @@
         name: "{{ _docker_compose_package }}"
         state: present
         extra_args: "{{ local_pip | default(omit) }}"
+        executable: pip2
       register: result
       retries: "{{ number_of_retries }}"
       until: result is succeeded
@@ -165,6 +236,7 @@
         url: "{{ _docker_compose_completion_url }}"
         dest: "/etc/bash_completion.d"
       become: yes
+
 - name: create the directory for docker images
   file:
     path: "{{ docker_images_dir }}"

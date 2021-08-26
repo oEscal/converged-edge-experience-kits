@@ -10,9 +10,7 @@
     name: https://repo.ius.io/ius-release-el7.rpm
     state: present
   become: yes
-  when: 
-     - not offline_enable
-     - ansible_distribution == "CentOS"
+  when: not offline_enable
 
 - name: Set empty local_pip var
   set_fact:
@@ -33,33 +31,6 @@
     enablerepo: "{{ omit if offline_enable else 'ius-archive' }}"
     skip_broken: yes
   become: yes
-  when: ansible_distribution == "CentOS"
-
-- name: install make in Ubuntu distributions
-  apt:
-    name: make
-    state: present
-  become: yes
-  when: ansible_distribution == "Ubuntu"
-
-- name: install gcc in Ubuntu distributions
-  apt:
-    name: gcc
-    state: present
-  become: yes
-  when: ansible_distribution == "Ubuntu"
-
-- name: Download pip2 in ubuntu
-  get_url:
-    url: https://bootstrap.pypa.io/pip/2.7/get-pip.py
-    dest: /home/openness/get-pip.py
-    mode: '0777'
-  become: yes
-  when: ansible_distribution == "Ubuntu"
-
-- name: Install pip2 in Ubuntu
-  command: python2 /home/openness/get-pip.py
-  when: ansible_distribution == "Ubuntu"
 
 - name: upgrade python2-pip version
   command: "python2 -m pip install {{ local_pip }} --upgrade pip=={{ _pip_version }}"
@@ -69,7 +40,6 @@
   until: result is succeeded
   changed_when: true
   become: yes
-  when: ansible_distribution == "CentOS"  
 
 - name: get installed OpenSSL version
   command: "openssl version"

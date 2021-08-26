@@ -1,6 +1,5 @@
 # SPDX-License-Identifier: Apache-2.0
 # Copyright (c) 2019-2020 Intel Corporation
-# SELinux is not activated by default in Ubuntu thus we will only run this command when the os is CentOS
 
 ---
 - name: Set SELinux to permissive mode (till next reboot) (1/2)
@@ -8,11 +7,9 @@
   ignore_errors: true
   changed_when: false
   become: yes
-  when: ansible_distribution == "CentOS"
 
 - name: Set SELinux to permissive mode permanently (2/2)
   selinux:
     policy: targeted
     state: permissive
   become: yes
-  when: ansible_distribution == "CentOS"

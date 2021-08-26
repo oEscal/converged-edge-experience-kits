@@ -3,13 +3,27 @@
 
 ---
 
+- name: debug os distribution
+  debug: msg=" OS Distribution {{ansible_distribution}}"
+
+- name: install ldap auth config
+  apt:
+    name: ldap-auth-config
+    state: present
+  become: yes
+  when: ansible_distribution == "Ubuntu"
+
+# Disable fingerprint command was not found for ubuntu thus we ignored it
+
 - name: install authconfig
   yum:
     name: authconfig
     state: present
   become: yes
+  when: ansible_distribution == "CentOS"
 
 - name: disable fingerprint to avoid ssh timeout issues
   command: authconfig --disablefingerprint --update
   changed_when: false
   become: yes
+  when: ansible_distribution == "CentOS"
