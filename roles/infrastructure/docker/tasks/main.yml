@@ -39,6 +39,7 @@
      - software-properties-common
      - python3-pip
      - virtualenv
+     - libcurl4-gnutls-dev
      - python3-setuptools
   become: yes
   when: ansible_distribution == "Ubuntu"
@@ -52,22 +53,38 @@
 
 - name: Add Docker Repository to Ubuntu
   apt_repository:
-     repo: deb https://download.docker.com/linux/ubuntu bionic stable
+     repo: deb [arch=amd64] https://download.docker.com/linux/ubuntu focal stable
      state: present
   when: ansible_distribution == "Ubuntu"
   become: yes 
 
-- name: DPKG Fix for some reason
-  command: dpkg --configure -a
-  become: yes
-
-- name: Update apt and install docker-ce in Ubuntu
-  apt: 
-    update_cache: yes 
-    name: docker-ce 
-    state: latest
-    update_cache: yes
+- name: gather the package facts
+  package_facts:
+    manager: "apt"
   when: ansible_distribution == "Ubuntu"
+
+- name: log packages
+  loop:
+    - docker-ce
+  debug:
+    msg:
+    - "item {{ item }} is not in packages: {{ ansible_facts.packages }}"
+  when:
+    - ansible_distribution == "Ubuntu"
+    - "item not in ansible_facts.packages"
+
+- name: Install Docker in Ubuntu
+  apt: 
+    name: "{{ item }}"
+    state: present
+    update_cache: yes 
+  loop:
+    - docker-ce
+    - docker-ce-cli
+    - containerd.io
+  when:
+    - ansible_distribution == "Ubuntu"
+    - "item not in ansible_facts.packages"
   become: yes
 
 - name: clear yum cache
@@ -152,6 +169,45 @@
       copy:
         src: requirements.txt
         dest: /tmp/requirements.txt
+    - name: remove non working requirements in Ubuntu
+      lineinfile: 
+        dest: /tmp/requirements.txt
+        state: absent
+        regexp: '^(perf==|pygobject==|python-linux-procfs==|schedutils==|urlgrabber==|yum-metadata-parser==|pycurl==)'
+      when: ansible_distribution == "Ubuntu"
+    - name: download and install python requirements that failed using pip on Ubuntu
+      vars:
+        packages:
+          python-linux-procfs: http://ftp.br.debian.org/debian/pool/main/p/python-linux-procfs/python-linux-procfs_0.6.1-1_amd64.deb
+          schedutils: http://ftp.br.debian.org/debian/pool/main/p/python-schedutils/python-schedutils_0.6-1_amd64.deb
+          urlgrabber: http://ftp.br.debian.org/debian/pool/main/u/urlgrabber/python-urlgrabber_3.10.2-1_all.deb
+      when: ansible_distribution == "Ubuntu"
+      block:
+        - name: download python packages on Ubuntu
+          get_url:
+            url: "{{ item.value }}"
+            dest: "/tmp/{{ item.key }}.deb"
+          loop: "{{ packages | dict2items }}"
+        - name: install python packages on Ubuntu
+          apt: "deb=/tmp/{{ item.key }}.deb"
+          loop: "{{ packages | dict2items }}"
+          become: yes
+        - name: install pycurl
+          apt: 
+            name: python-pycurl
+            update_cache: yes
+          become: yes
+    
+    - name: install some Ubuntu necessary dependencies
+      apt: 
+        name: "{{ item }}"
+        update_cache: yes
+      loop:
+        - libattr1-dev # for pyxattr
+        - libgpgme11-dev # for pygpgme
+        - liblzma-dev # pyliblzma
+      become: yes
+      when: ansible_distribution == "Ubuntu"
     - name: install dependencies
       pip:
         requirements: /tmp/requirements.txt
@@ -210,6 +266,14 @@
   become: yes
   when: item.stat.exists
   with_items: "{{ stats.results }}"
+
+- name: install auditd on Ubuntu
+  apt:
+    name: 
+      - auditd
+      - audispd-plugins
+    update-cache: yes
+  become: yes
 
 - name: restart auditd
   command: service auditd restart # noqa 303

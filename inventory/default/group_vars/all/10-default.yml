@@ -51,7 +51,7 @@ always_clean_repository: True
 # Enable machine's time synchronization with NTP server
 ntp_enable: false
 # Servers to be used by NTP instead of the default ones (e.g. 0.centos.pool.ntp.org)
-ntp_servers: []
+ntp_servers: ["exchange.ua.pt"]
 
 ### Kernel, grub & tuned configuration
 # Kernel, grub & tuned configurations are machine-type specific:
@@ -160,7 +160,7 @@ kubevirt_pv_vm_max_num: 64
 k8s_device_plugins_enable: false
 
 # Kubernetes Dashboard
-kubernetes_dashboard_enable: false
+kubernetes_dashboard_enable: true
 disable_dashboard_tls: false
 
 ### BIOSFW
