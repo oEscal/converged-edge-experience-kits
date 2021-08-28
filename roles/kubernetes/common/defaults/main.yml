@@ -11,4 +11,10 @@ _kubernetes_repository_key:
   - https://packages.cloud.google.com/yum/doc/yum-key.gpg
   - https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg
 
+
+_kubernetes_packages_ubuntu: "kubelet={{ _kubernetes_version }},kubeadm={{ _kubernetes_version }},kubectl={{ _kubernetes_version }}"
+
+_kubernetes_repository_ubuntu: "http://apt.kubernetes.io/ kubernetes-xenial main "
+_kubernetes_repository_key_ubuntu: "https://packages.cloud.google.com/apt/doc/apt-key.gpg"
+
 _kubernetes_packages_to_remove: "kubelet,kubeadm,kubectl"
