@@ -49,35 +49,17 @@
         - enable and restart kubelet
 
 - name: Ubuntu installation
+  become: yes
   when: ansible_distribution == "Ubuntu"
   block:
-    - name: create empty file for containerd module
-      copy: 
-        content: ""
-        dest: /etc/modules-load.d/containerd.conf
-        force: no
-    - name: configure module for containerd
-      blockinfile:
-        path: /etc/modules-load.d/containerd.conf 
-        block: |
-              overlay
-              br_netfilter
-    - name: configure containerd
-      block:
-        - shell: /usr/bin/containerd config default > /etc/containerd/config.toml
-        - systemd:
-          name: containerd
-          state: restarted
-          enabled: yes
-          daemon-reload: yes
-    
     - name: add Google official GPG key
       apt_key:
         url: "{{ _kubernetes_repository_key_ubuntu }}"
         state: present
     - name: add Kubernetes repository
-      apt_respository:
-        repo: deb "{{ _kubernetes_repository_ubuntu }}"
+      apt_repository:
+        repo: "{{ _kubernetes_repository_ubuntu }}"
+        update_cache: yes
         state: present
         filename: kuerbentes
         mode: 0600

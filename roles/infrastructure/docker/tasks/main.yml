@@ -65,7 +65,7 @@
 
 - name: log packages
   loop:
-    - docker-ce
+    - docker.io
   debug:
     msg:
     - "item {{ item }} is not in packages: {{ ansible_facts.packages }}"
@@ -79,9 +79,7 @@
     state: present
     update_cache: yes 
   loop:
-    - docker-ce
-    - docker-ce-cli
-    - containerd.io
+    - docker.io
   when:
     - ansible_distribution == "Ubuntu"
     - "item not in ansible_facts.packages"
