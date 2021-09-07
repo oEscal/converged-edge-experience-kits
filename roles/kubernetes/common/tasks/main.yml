@@ -92,6 +92,14 @@
       when: sysctl_out.rc == 0
   become: yes
 
+- name: install firewalld package on Ubuntu
+  apt:
+    name: firewalld
+    state: present
+    update_cache: yes
+  become: yes
+  when: ansible_distribution == "Ubuntu"
+
 - name: open common firewall ports
   ignore_errors: yes
   firewalld:
@@ -104,6 +112,8 @@
     - 6443/tcp
     - 2379-2380/tcp
     - 10250-10252/tcp
+  #vars:
+  #  ansible_python_interpreter: '/usr/bin/python3'
 
 - name: restart services if needed
   meta: flush_handlers
