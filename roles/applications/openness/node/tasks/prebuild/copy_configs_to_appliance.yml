@@ -2,6 +2,13 @@
 # Copyright (c) 2019-2020 Intel Corporation
 
 ---
+- name: install necessary dependencies on Ubuntu
+  apt: 
+    name:
+      - moreutils     # for sponge command
+      - jq
+    update-cache: yes
+
 - name: create config directory
   file:
     path: "{{ _configs_dest }}"
