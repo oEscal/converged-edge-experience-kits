@@ -49,16 +49,27 @@
   become: yes
   when: ansible_distribution == "Ubuntu"
 
+- name: install Python 2 in Ubuntu
+  apt:
+    name: python2
+    state: present
+    update_cache: yes
+  become: yes
+  when: ansible_distribution == "Ubuntu"
+
 - name: Download pip2 in ubuntu
   get_url:
     url: https://bootstrap.pypa.io/pip/2.7/get-pip.py
     dest: /home/openness/get-pip.py
     mode: '0777'
   become: yes
+  vars:
+    ansible_python_interpreter: '/usr/bin/python3'
   when: ansible_distribution == "Ubuntu"
 
 - name: Install pip2 in Ubuntu
   command: python2 /home/openness/get-pip.py
+  become: yes
   when: ansible_distribution == "Ubuntu"
 
 - name: upgrade python2-pip version

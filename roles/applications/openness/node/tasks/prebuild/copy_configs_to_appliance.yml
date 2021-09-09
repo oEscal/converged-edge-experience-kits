@@ -8,6 +8,7 @@
       - moreutils     # for sponge command
       - jq
     update-cache: yes
+  become: yes
 
 - name: create config directory
   file:
