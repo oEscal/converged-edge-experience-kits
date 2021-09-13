@@ -5,6 +5,11 @@
 - debug:
     msg: "Setting up OS"
 
+- name: set certificates directory on Ubuntu
+  lineinfile:
+    path: /etc/environment
+    line: SSL_CERT_DIR=/etc/ssl/certs
+
 - include_tasks: disable_fingerprint.yml
 - include_tasks: disable_swap.yml
 - include_tasks: disable_selinux.yml
