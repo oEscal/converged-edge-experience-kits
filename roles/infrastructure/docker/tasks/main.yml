@@ -205,6 +205,9 @@
                 - python3-cairo
                 - python3-cairo-dev
                 - python3-cairo-doc
+              state: present
+              update_cache: yes
+            become: yes
           - unarchive:
               src: https://ftp-stud.hs-esslingen.de/pub/Mirrors/ftp.gnome.org/sources/pygobject/3.22/pygobject-3.22.0.tar.xz
               dest: /tmp/
@@ -221,12 +224,13 @@
     
     - name: install some Ubuntu necessary dependencies
       apt: 
-        name: "{{ item }}"
+        name:
+          - python-dev
+          - libattr1-dev # for pyxattr
+          - libgpgme11-dev # for pygpgme
+          - liblzma-dev # pyliblzma
+        state: present
         update_cache: yes
-      loop:
-        - libattr1-dev # for pyxattr
-        - libgpgme11-dev # for pygpgme
-        - liblzma-dev # pyliblzma
       become: yes
       when: ansible_distribution == "Ubuntu"
     - name: install dependencies

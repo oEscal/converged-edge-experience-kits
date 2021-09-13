@@ -63,8 +63,6 @@
     dest: /home/openness/get-pip.py
     mode: '0777'
   become: yes
-  vars:
-    ansible_python_interpreter: '/usr/bin/python3'
   when: ansible_distribution == "Ubuntu"
 
 - name: Install pip2 in Ubuntu
