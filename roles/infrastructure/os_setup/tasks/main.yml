@@ -9,6 +9,7 @@
   lineinfile:
     path: /etc/environment
     line: SSL_CERT_DIR=/etc/ssl/certs
+  become: yes
 
 - include_tasks: disable_fingerprint.yml
 - include_tasks: disable_swap.yml
