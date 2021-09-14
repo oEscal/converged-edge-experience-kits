@@ -1,8 +1,16 @@
 
 ---
-- name: change the default sh
+- name: remove dash as the default sh on Ubuntu
   ansible.builtin.debconf:
     name: dash/sh
     question: dash/sh
-    value: false
+    value: 'false'
     vtype: boolean
+  become: yes
+  when: ansible_distribution == 'Ubuntu'
+
+- name: set the default sh as bash on Ubuntu
+  shell: dpkg-reconfigure -p critical dash
+  become: yes
+  when: ansible_distribution == 'Ubuntu'
+
