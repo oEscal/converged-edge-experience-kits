@@ -1,0 +1,8 @@
+
+---
+- name: change the default sh
+  ansible.builtin.debconf:
+    name: dash/sh
+    question: dash/sh
+    value: false
+    vtype: boolean
